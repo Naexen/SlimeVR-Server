@@ -1,10 +1,7 @@
 package dev.slimevr.protocol.rpc.settings;
 
 import com.google.flatbuffers.FlatBufferBuilder;
-import dev.slimevr.config.FiltersConfig;
-import dev.slimevr.config.LegTweaksConfig;
-import dev.slimevr.config.OSCConfig;
-import dev.slimevr.config.TapDetectionConfig;
+import dev.slimevr.config.*;
 import dev.slimevr.filtering.TrackerFilters;
 import dev.slimevr.platform.SteamVRBridge;
 import dev.slimevr.vr.processor.skeleton.SkeletonConfig;
@@ -43,7 +40,7 @@ public class RPCSettingsBuilder {
 
 	public static int createVRCOSCSettings(
 		FlatBufferBuilder fbb,
-		OSCConfig config
+		VRCOSCConfig config
 	) {
 		int addressStringOffset = fbb.createString(config.getAddress());
 		int generalSettingOffset = OSCSettings

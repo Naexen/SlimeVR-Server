@@ -4,6 +4,7 @@ import com.google.flatbuffers.FlatBufferBuilder;
 import dev.slimevr.config.FiltersConfig;
 import dev.slimevr.config.OSCConfig;
 import dev.slimevr.config.TapDetectionConfig;
+import dev.slimevr.config.VRCOSCConfig;
 import dev.slimevr.filtering.TrackerFilters;
 import dev.slimevr.osc.OSCRouter;
 import dev.slimevr.osc.VRCOSCHandler;
@@ -114,7 +115,7 @@ public record RPCSettingsHandler(RPCHandler rpcHandler, ProtocolAPI api) {
 		}
 
 		if (req.vrcOsc() != null) {
-			OSCConfig vrcOSCConfig = this.api.server
+			VRCOSCConfig vrcOSCConfig = this.api.server
 				.getConfigManager()
 				.getVrConfig()
 				.getVrcOSC();
