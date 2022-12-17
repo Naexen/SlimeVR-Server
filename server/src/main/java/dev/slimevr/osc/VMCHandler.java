@@ -9,6 +9,7 @@ import com.jme3.math.Vector3f;
 import dev.slimevr.VRServer;
 import dev.slimevr.config.OSCConfig;
 import dev.slimevr.vr.processor.HumanPoseProcessor;
+import dev.slimevr.vr.processor.skeleton.Skeleton;
 import io.eiren.util.collections.FastList;
 import io.eiren.util.logging.LogManager;
 
@@ -29,11 +30,10 @@ public class VMCHandler implements OSCHandler {
 	private final FastList<Object> oscArgs = new FastList<>(3);
 	private final Vector3f vecBuf = new Vector3f();
 	private final Quaternion quatBuf = new Quaternion();
-	private long timeAtLastOSCMessageReceived;
+	private float timeAtLastError;
 	private int lastPortIn;
 	private int lastPortOut;
 	private InetAddress lastAddress;
-	private float timeAtLastError;
 
 	public VMCHandler(
 		VRServer server,
@@ -159,34 +159,72 @@ public class VMCHandler implements OSCHandler {
 				}
 			}
 
-			// Send root transform
-			humanPoseProcessor.getSkeleton().getRootNode().worldTransform.getTranslation(vecBuf);
-			humanPoseProcessor.getSkeleton().getRootNode().worldTransform.getRotation(quatBuf);
-			oscArgs.clear();
-			oscArgs.add("root");
-			oscArgs.add(vecBuf.x);
-			oscArgs.add(vecBuf.y);
-			oscArgs.add(vecBuf.z);
-			oscArgs.add(quatBuf.getX());
-			oscArgs.add(quatBuf.getY());
-			oscArgs.add(quatBuf.getZ());
-			oscArgs.add(quatBuf.getW());
-			oscMessage = new OSCMessage(
-				"/VMC/Ext/Root/Pos",
-				oscArgs
-			);
-			try {
-				oscSender.send(oscMessage);
-			} catch (IOException | OSCSerializeException e) {
-				// Avoid spamming AsynchronousCloseException too many
-				// times per second
-				if (System.currentTimeMillis() - timeAtLastError > 100) {
-					timeAtLastError = System.currentTimeMillis();
-					LogManager
-						.warning(
-							"[VMCHandler] Error sending OSC message: "
-								+ e
-						);
+			Skeleton skeleton = humanPoseProcessor.getSkeleton();
+			if (skeleton != null) {
+				// TODO: is needed?
+				// Send root transform
+				humanPoseProcessor.getSkeleton().getRootNode().worldTransform
+					.getTranslation(vecBuf);
+				humanPoseProcessor.getSkeleton().getRootNode().worldTransform.getRotation(quatBuf);
+				oscArgs.clear();
+				oscArgs.add("root");
+				oscArgs.add(vecBuf.x);
+				oscArgs.add(vecBuf.y);
+				oscArgs.add(vecBuf.z);
+				oscArgs.add(quatBuf.getX());
+				oscArgs.add(quatBuf.getY());
+				oscArgs.add(quatBuf.getZ());
+				oscArgs.add(quatBuf.getW());
+				oscMessage = new OSCMessage(
+					"/VMC/Ext/Root/Pos",
+					oscArgs
+				);
+				try {
+					oscSender.send(oscMessage);
+				} catch (IOException | OSCSerializeException e) {
+					// Avoid spamming AsynchronousCloseException too many
+					// times per second
+					if (System.currentTimeMillis() - timeAtLastError > 100) {
+						timeAtLastError = System.currentTimeMillis();
+						LogManager
+							.warning(
+								"[VMCHandler] Error sending OSC message: "
+									+ e
+							);
+					}
+				}
+
+				// Send humanoid bones transforms
+				// TODO foreach
+				vecBuf.set(0f, 1f, 2f);
+				quatBuf.set(Quaternion.Y_90_DEG);
+				oscArgs.clear();
+				// https://docs.unity3d.com/ScriptReference/HumanBodyBones.html
+				oscArgs.add("RightLowerArm");
+				oscArgs.add(vecBuf.x);
+				oscArgs.add(vecBuf.y);
+				oscArgs.add(vecBuf.z);
+				oscArgs.add(quatBuf.getX());
+				oscArgs.add(quatBuf.getY());
+				oscArgs.add(quatBuf.getZ());
+				oscArgs.add(quatBuf.getW());
+				oscMessage = new OSCMessage(
+					"/VMC/Ext/Bone/Pos",
+					oscArgs
+				);
+				try {
+					oscSender.send(oscMessage);
+				} catch (IOException | OSCSerializeException e) {
+					// Avoid spamming AsynchronousCloseException too many
+					// times per second
+					if (System.currentTimeMillis() - timeAtLastError > 100) {
+						timeAtLastError = System.currentTimeMillis();
+						LogManager
+							.warning(
+								"[VMCHandler] Error sending OSC message: "
+									+ e
+							);
+					}
 				}
 			}
 		}
